@@ -1,0 +1,72 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: marketpulse-postgres
+    restart: always
+    environment:
+      POSTGRES_USER: marketpulse
+      POSTGRES_PASSWORD: marketpulse123
+      POSTGRES_DB: marketpulse_db
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U marketpulse -d marketpulse_db"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    container_name: marketpulse-redis
+    restart: always
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  api:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.api
+    container_name: marketpulse-api
+    restart: always
+    environment:
+      NODE_ENV: production
+      PORT: 4000
+      DATABASE_URL: "postgresql://marketpulse:marketpulse123@postgres:5432/marketpulse_db?schema=public"
+      REDIS_URL: "redis://redis:6379"
+      JWT_SECRET: "marketpulse_super_secret_jwt_key_2026_production_grade"
+      OLLAMA_URL: "http://host.docker.internal:11434"
+    ports:
+      - "4000:4000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+  web:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.web
+    container_name: marketpulse-web
+    restart: always
+    environment:
+      NODE_ENV: production
+      PORT: 3000
+      NEXT_PUBLIC_API_URL: "http://localhost:4000"
+      NEXT_PUBLIC_WS_URL: "ws://localhost:4000"
+    ports:
+      - "3000:3000"
+    depends_on:
+      - api
+
+volumes:
+  postgres_data:

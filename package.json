@@ -1,0 +1,20 @@
+{
+  "name": "marketpulse-monorepo",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Production-grade financial intelligence and stock research platform",
+  "workspaces": [
+    "apps/*"
+  ],
+  "scripts": {
+    "dev": "concurrently \"npm run dev --workspace=apps/api\" \"npm run dev --workspace=apps/web\"",
+    "build": "npm run build --workspace=apps/api && npm run build --workspace=apps/web",
+    "seed": "npm run seed --workspace=apps/api",
+    "test": "npm run test --workspace=apps/api && npm run test --workspace=apps/web",
+    "benchmark": "npm run benchmark --workspace=apps/api",
+    "lint": "npm run lint --workspace=apps/api && npm run lint --workspace=apps/web"
+  },
+  "devDependencies": {
+    "concurrently": "^8.2.2"
+  }
+}
