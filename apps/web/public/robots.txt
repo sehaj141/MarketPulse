@@ -1,3 +1,0 @@
-# MarketPulse Robots.txt
-User-agent: *
-Allow: /
